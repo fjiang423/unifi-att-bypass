@@ -132,12 +132,84 @@ You should have internet now.
 
 2. Sometimes, USG interface configuration may be reset by controller, apply interface config again to restore connection.
 
+3. Use advanced config for Unifi to prevent manual update interface config, especially when power off or USG upgrade: https://help.ui.com/hc/en-us/articles/215458888#4
+```json
+{
+  "interfaces": {
+    "ethernet": {
+      "eth0": {
+        "description": "LAN",
+        "duplex": "auto",
+        "speed": "auto"
+      },
+      "eth1": {
+        "description": "AT&T router",
+        "duplex": "auto",
+        "speed": "auto"
+      },
+      "eth2": {
+        "description": "WAN",
+        "duplex": "auto",
+        "firewall": {
+          "in": {
+            "name": "WAN_IN"
+          },
+          "local": {
+            "name": "WAN_LOCAL"
+          }
+        },
+        "speed": "auto",
+        "vif": {
+          "0": {
+            "address": [
+              "dhcp"
+            ],
+            "description": "WAN VLAN 0",
+            "dhcp-options": {
+              "default-route": "update",
+              "default-route-distance": "210",
+              "name-server": "update"
+            },
+            "firewall": {
+              "in": {
+                "ipv6-name": "WANv6_IN",
+                "name": "WAN_IN"
+              },
+              "local": {
+                "ipv6-name": "WANv6_LOCAL",
+                "name": "WAN_LOCAL"
+              }
+            },
+            "mac": "88:71:b1:45:31:f1"
+          }
+        }
+      }
+    }
+  },
+  "service": {
+    "nat": {
+      "rule": {
+        "5010": {
+          "description": "masquerade for WAN",
+          "outbound-interface": "eth2.0",
+          "protocol": "all",
+          "type": "masquerade"
+        }
+      }
+    },
+    "offload": {
+      "ipv4": {
+        "vlan": "enable"
+      }
+    }
+  }
+}
+```
+
 # Appendix
 
 1. Interface Config for USG Pro
 ```
-sudo python /config/scripts/eap_proxy.py --restart-dhcp --ignore-when-wan-up --ignore-logoff --ping-gateway eth2 eth1
-
 configure
 set interfaces ethernet eth2 description WAN
 set interfaces ethernet eth2 duplex auto
@@ -165,6 +237,7 @@ set service nat rule 5010 protocol all
 set service nat rule 5010 type masquerade
 set system offload ipv4 vlan enable
 commit
+save
 exit
 ```
 
