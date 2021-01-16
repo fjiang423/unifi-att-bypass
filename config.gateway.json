@@ -60,7 +60,9 @@
           "type": "masquerade"
         }
       }
-    },
+    }
+  },
+  "system": {
     "offload": {
       "ipv4": {
         "vlan": "enable"

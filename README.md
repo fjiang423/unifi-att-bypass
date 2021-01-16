@@ -125,86 +125,24 @@ You should have internet now.
 
 ## Do `reboot now`
 
-# Troubleshoot 
+## <a name="advanced"></a>(Advanced) Use advanced config for Unifi to prevent manual update interface config
+
+You can put a JSON file for USG interface config in specific **Controller (such as CloudKey)** directory, and Controller will automatically sync your USG interface config using this file. This is very useful
+when power off or USG firmware upgrade reset your config, Controller will resync after the reboot. 
+
+See [this article](https://help.ui.com/hc/en-us/articles/215458888#4) for details. Below steps are target for **Unifi CloudKey** and **USG Pro** setup:
+
+1. Copy [gateway config file](https://github.com/fjiang423/unifi-att-bypass/blob/master/config.gateway.json) to `/srv/unifi/data/sites/[site name/default]/` directory.
+1. Change ownership to `unifi:unifi`
+1. Running a "force provision" to the USG in the `UniFi Controller Devices > USG > Config > Manage Device > Force provision`. You can check `Alert` by clicking bell icon in left bottom of Controller UI if things are not working properly.
+
+# Troubleshoot
 1. After USG rebooting still no internet? 
 * Power cycle AT&T router should fix it.
 * Or replug cable for router -> USG.
+1. Sometimes, USG interface configuration may be reset by controller, apply interface config again to restore connection.
+1. [Use advanced config for Unifi to prevent manual update interface config](https://help.ui.com/hc/en-us/articles/215458888#4), **especially when power off or USG upgrade**.
 
-2. Sometimes, USG interface configuration may be reset by controller, apply interface config again to restore connection.
-
-3. Use advanced config for Unifi to prevent manual update interface config, especially when power off or USG upgrade: https://help.ui.com/hc/en-us/articles/215458888#4
-```json
-{
-  "interfaces": {
-    "ethernet": {
-      "eth0": {
-        "description": "LAN",
-        "duplex": "auto",
-        "speed": "auto"
-      },
-      "eth1": {
-        "description": "AT&T router",
-        "duplex": "auto",
-        "speed": "auto"
-      },
-      "eth2": {
-        "description": "WAN",
-        "duplex": "auto",
-        "firewall": {
-          "in": {
-            "name": "WAN_IN"
-          },
-          "local": {
-            "name": "WAN_LOCAL"
-          }
-        },
-        "speed": "auto",
-        "vif": {
-          "0": {
-            "address": [
-              "dhcp"
-            ],
-            "description": "WAN VLAN 0",
-            "dhcp-options": {
-              "default-route": "update",
-              "default-route-distance": "210",
-              "name-server": "update"
-            },
-            "firewall": {
-              "in": {
-                "ipv6-name": "WANv6_IN",
-                "name": "WAN_IN"
-              },
-              "local": {
-                "ipv6-name": "WANv6_LOCAL",
-                "name": "WAN_LOCAL"
-              }
-            },
-            "mac": "88:71:b1:45:31:f1"
-          }
-        }
-      }
-    }
-  },
-  "service": {
-    "nat": {
-      "rule": {
-        "5010": {
-          "description": "masquerade for WAN",
-          "outbound-interface": "eth2.0",
-          "protocol": "all",
-          "type": "masquerade"
-        }
-      }
-    },
-    "offload": {
-      "ipv4": {
-        "vlan": "enable"
-      }
-    }
-  }
-}
-```
 
 # Appendix
 
@@ -240,8 +178,7 @@ commit
 save
 exit
 ```
-
-2. Testing command for USG Pro
+1. Testing command for USG Pro
 ```
 sudo python /config/scripts/eap_proxy.py --restart-dhcp --ignore-when-wan-up --ignore-logoff --ping-gateway eth2 eth1
 ```
